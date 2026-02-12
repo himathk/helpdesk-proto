@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", sans-serif;
+
+  /* --- Collection 1: Brand (Primitive Tokens) --- */
+
+  /* Blue (Primary Brand) */
+  --color-blue-100: #EEF3FA;
+  --color-blue-200: #D4E1F3;
+  --color-blue-300: #A8C4E8;
+  --color-blue-400: #7BA7DC;
+  --color-blue-500: #5589CD;
+  --color-blue-600: #335FA3; /* Primary */
+  --color-blue-700: #284A82;
+  --color-blue-800: #1E3862;
+  --color-blue-900: #152742;
+
+  /* Cyan (Secondary Brand) */
+  --color-cyan-100: #E5F8FC;
+  --color-cyan-200: #B8EDF6;
+  --color-cyan-300: #8BE2F0;
+  --color-cyan-400: #5DD7EA;
+  --color-cyan-500: #30CCE4;
+  --color-cyan-600: #10B3D6; /* Secondary */
+  --color-cyan-700: #0D8FAB;
+  --color-cyan-800: #0A6B80;
+  --color-cyan-900: #074755;
+
+  /* Navy (Heading/Strong Text) */
+  --color-navy-100: #E8EAF0;
+  --color-navy-200: #C8CCDC;
+  --color-navy-300: #A8AFCA;
+  --color-navy-400: #8891B7;
+  --color-navy-500: #4C5682;
+  --color-navy-600: #1D2746; /* Heading */
+  --color-navy-700: #171F38;
+  --color-navy-800: #11172A;
+  --color-navy-900: #0B0F1C;
+
+  /* Slate (Body Text/Icons) */
+  --color-slate-100: #F3F4F5;
+  --color-slate-200: #E3E4E8;
+  --color-slate-300: #C8CACD;
+  --color-slate-400: #ADB0B3;
+  --color-slate-500: #929599;
+  --color-slate-600: #6B707F; /* Text */
+  --color-slate-700: #555965;
+  --color-slate-800: #40434B;
+  --color-slate-900: #2A2D32;
+
+  /* Ice (Background Gradient Start) */
+  --color-ice-50: #FAFEFF;
+  --color-ice-100: #F5FDFF; /* Background */
+  --color-ice-200: #E6F9FC;
+  --color-ice-300: #D6F5F9;
+  --color-ice-400: #C7F1F6;
+  --color-ice-500: #B8EDF3;
+
+  /* Peach (Background Gradient End) */
+  --color-peach-50: #FFF9F8;
+  --color-peach-100: #FEEFEC; /* Gradient End */
+  --color-peach-200: #FDDFD9;
+  --color-peach-300: #FCCFC6;
+  --color-peach-400: #FBBFB3;
+  --color-peach-500: #FAAFA0;
+
+  /* Status Colors */
+
+  /* Red (Error/Critical) */
+  --color-red-100: #FEE2E2;
+  --color-red-200: #FECACA;
+  --color-red-300: #FCA5A5;
+  --color-red-400: #F87171;
+  --color-red-500: #EF4444;
+  --color-red-600: #DC2626;
+  --color-red-700: #B91C1C;
+  --color-red-800: #991B1B;
+  --color-red-900: #7F1D1D;
+
+  /* Amber (Warning/Pending) */
+  --color-amber-100: #FEF3C7;
+  --color-amber-200: #FDE68A;
+  --color-amber-300: #FCD34D;
+  --color-amber-400: #FBBF24;
+  --color-amber-500: #F59E0B;
+  --color-amber-600: #D97706;
+  --color-amber-700: #B45309;
+  --color-amber-800: #92400E;
+  --color-amber-900: #78350F;
+
+  /* Green (Success/Resolved) */
+  --color-green-100: #D1FAE5;
+  --color-green-200: #A7F3D0;
+  --color-green-300: #6EE7B7;
+  --color-green-400: #34D399;
+  --color-green-500: #10B981;
+  --color-green-600: #059669;
+  --color-green-700: #047857;
+  --color-green-800: #065F46;
+  --color-green-900: #064E3B;
+
+  /* --- Collection 2: Alias (Semantic Tokens) --- */
+  
+  --color-primary: var(--color-blue-600);
+  --color-primary-hover: var(--color-blue-700);
+  
+  --color-secondary: var(--color-cyan-600);
+  --color-secondary-hover: var(--color-cyan-700);
+  
+  --color-heading: var(--color-navy-600);
+  --color-text: var(--color-slate-600);
+  --color-text-tertiary: var(--color-slate-400); /* Missing in original map step, added now */
+  
+  --color-background: var(--color-ice-100);
+  --color-surface: #FFFFFF;
+  
+  /* Glass Semantic Colors - Adding specific colors for manual usage if needed */
+  --color-glass-panel: rgba(255, 255, 255, 0.80);
+  --color-glass-card: rgba(255, 255, 255, 0.70);
+  --color-glass-border: rgba(51, 95, 163, 0.10); /* Blue-600 at 10% */
+
+  /* Animations */
+  --animate-blob: blob 7s infinite;
+}
+
+@layer utilities {
+  /* 
+    Glass Panel 
+    Fill: white/80, Border: blue-600/10, Blur: xl (24px), Shadow: xl 
+  */
+  .glass-panel {
+    @apply bg-glass-panel backdrop-blur-xl border border-glass-border shadow-xl rounded-xl;
+  }
+  
+  /* 
+    Glass Card 
+    Fill: white/70, Border: white/60 (default), Blur: lg (16px), Shadow: lg
+    Hover: Fill: white/100, Border: blue-600/20
+  */
+  .glass-card {
+    @apply bg-glass-card backdrop-blur-lg border border-white/60 shadow-lg rounded-xl hover:bg-white hover:border-blue-600/20 transition-all duration-300;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-linear-to-r from-blue-600 to-cyan-600;
+  }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-blue-200 rounded-full hover:bg-blue-300;
+  }
+}
+
+body {
+  background-color: var(--color-background);
+  /* Page Gradient: Ice 100 to Peach 100 */
+  background-image: 
+    linear-gradient(135deg, var(--color-ice-100) 0%, var(--color-peach-100) 100%);
+  background-attachment: fixed;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
