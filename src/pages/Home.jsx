@@ -6,6 +6,103 @@ import DynamicIcon from '../components/DynamicIcon';
 import CardSwap, { Card } from '../components/CardSwap';
 import { Link, useLocation } from 'react-router-dom';
 
+// Internal component for the video card content with individual loader
+const VideoCardContent = ({ src, title, icon: Icon, colorScheme }) => {
+    const [isLoading, setIsLoading] = useState(true);
+    const [progress, setProgress] = useState(0);
+
+    const handleProgress = (e) => {
+        if (e.target.duration > 0) {
+            // Use buffered ranges to approximate loading progress
+            const buffered = e.target.buffered;
+            if (buffered.length > 0) {
+                const loaded = buffered.end(buffered.length - 1);
+                const percent = Math.min((loaded / e.target.duration) * 100, 100);
+                setProgress(Math.round(percent));
+            }
+        }
+    };
+
+    const handleLoadedData = () => {
+        // Force complete when data is ready enough to play
+        setProgress(100);
+        setTimeout(() => setIsLoading(false), 500); 
+    };
+
+    return (
+        <>
+            {/* Window Header */}
+            <div className="h-10 border-b border-slate-100 flex items-center px-4 space-x-3 bg-slate-50/80 backdrop-blur-sm shrink-0 rounded-t-2xl relative z-10">
+                <div className="flex space-x-1.5">
+                    {/* Dynamic colors based on scheme */}
+                    <div className={`w-2.5 h-2.5 rounded-full transition-colors ${colorScheme === 'red' ? 'bg-red-400 group-hover:bg-red-500' : 'bg-white/20 group-hover:bg-red-500/50'}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full transition-colors ${colorScheme === 'amber' ? 'bg-amber-400 group-hover:bg-amber-500' : 'bg-white/10 group-hover:bg-yellow-500/50'}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full transition-colors ${colorScheme === 'green' ? 'bg-green-400 group-hover:bg-green-500' : 'bg-white/10 group-hover:bg-green-500/50'}`} />
+                </div>
+                {Icon && <Icon className="w-3.5 h-3.5 text-slate-400 ml-2" />}
+                <span className="text-xs font-medium text-slate-600 tracking-wide font-sans truncate">{title}</span>
+            </div>
+            
+            {/* Window Body */}
+            <div className="relative flex-1 w-full bg-white flex items-center justify-center overflow-hidden rounded-b-2xl">
+                <AnimatePresence>
+                    {isLoading && (
+                        <motion.div 
+                            initial={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white"
+                        >
+                            <div className="relative w-16 h-16 flex items-center justify-center">
+                                {/* Circular Progress */}
+                                <svg className="w-full h-full transform -rotate-90">
+                                    <circle
+                                        cx="32"
+                                        cy="32"
+                                        r="28"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                        fill="transparent"
+                                        className="text-slate-100"
+                                    />
+                                    <circle
+                                        cx="32"
+                                        cy="32"
+                                        r="28"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                        fill="transparent"
+                                        strokeDasharray={175.9} // 2 * PI * 28
+                                        strokeDashoffset={175.9 - (175.9 * progress) / 100}
+                                        className="text-primary transition-all duration-300 ease-out"
+                                    />
+                                </svg>
+                                <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-primary">
+                                    {progress}%
+                                </div>
+                            </div>
+                            <span className="mt-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider animate-pulse">
+                                Loading...
+                            </span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                
+                <video 
+                    src={src} 
+                    autoPlay 
+                    muted 
+                    loop 
+                    playsInline 
+                    onProgress={handleProgress}
+                    onLoadedData={handleLoadedData}
+                    onError={() => setIsLoading(false)} // Prevent infinite load
+                    className="w-full h-full object-contain"
+                />
+            </div>
+        </>
+    );
+};
+
 const Home = () => {
   const { modules } = useModules();
   const [searchTerm, setSearchTerm] = useState('');
@@ -13,56 +110,7 @@ const Home = () => {
   const location = useLocation();
   const searchContainerRef = useRef(null);
   
-  // Loading State
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const videoRefs = useRef([]);
-  const videosToLoad = 2; // We have 2 unique videos to load
 
-  useEffect(() => {
-    let loadedCount = 0;
-    const totalVideos = videosToLoad;
-
-    const handleVideoLoad = () => {
-      loadedCount++;
-      const progress = Math.min((loadedCount / totalVideos) * 100, 100);
-      setLoadingProgress(Math.round(progress));
-      
-      if (loadedCount >= totalVideos) {
-        setTimeout(() => {
-            setIsLoading(false);
-        }, 500); // Small buffer
-      }
-    };
-
-    // Fallback in case videos fail or are cached
-    const timeout = setTimeout(() => {
-        setIsLoading(false);
-    }, 8000); // 8s max wait
-
-    // Attach listeners to current refs
-    videoRefs.current.forEach(video => {
-        if (video) {
-            if (video.readyState >= 3) { // HSP_ENOUGH_DATA
-                handleVideoLoad();
-            } else {
-                video.addEventListener('loadeddata', handleVideoLoad);
-                video.addEventListener('canplay', handleVideoLoad);
-            }
-        }
-    });
-
-    return () => {
-        clearTimeout(timeout);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        videoRefs.current.forEach(video => {
-            if (video) {
-                video.removeEventListener('loadeddata', handleVideoLoad);
-                video.removeEventListener('canplay', handleVideoLoad);
-            }
-        });
-    };
-  }, []);
 
   const [heroTextIndex, setHeroTextIndex] = useState(0);
   const heroPhrases = ["Insurance Platform", "Claims Workflow", "Policy Engine", "Receipt Workflow"];
@@ -178,52 +226,7 @@ const Home = () => {
 
   const newGuides = allGuides.slice(1, 3); 
 
-  if (isLoading) {
-    return (
-        <div className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center font-sans">
-            <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center space-y-4"
-            >
-                <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-primary to-secondary tracking-tighter">
-                    {loadingProgress}%
-                </div>
-                <div className="h-1 w-48 bg-slate-100 rounded-full overflow-hidden mx-auto">
-                    <motion.div 
-                        className="h-full bg-primary" 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${loadingProgress}%` }}
-                        transition={{ ease: "linear" }}
-                    />
-                </div>
-                 <p className="text-slate-400 text-sm font-medium animate-pulse">Loading Assets...</p>
-                 
-                 {/* Hidden videos to trigger loading */}
-                 <div className="hidden">
-                    {['/Geo Management (1).mp4', '/Geo management - Manage Sub Zones (1).mp4'].map((src, i) => (
-                        <video 
-                            key={i}
-                            ref={el => {
-                                // We need 4 distinct refs for the counter logic, but we only have 2 unique videos.
-                                // Let's just track unique loads or bind twice?
-                                // Actually, simpler: just load the unique assets once.
-                                // But the user wants "videos inside cardswap is done loading".
-                                // Let's preload the source assets.
-                                if(el && !videoRefs.current.includes(el)) videoRefs.current.push(el) 
-                            }}
-                            src={src} 
-                            preload="auto"
-                            muted
-                        />
-                    ))}
-                    {/* Duplicate calls to match count logic or adjust count logic */}
-                    {/* Let's adjust logic: we just need the assets loaded via browser cache. */}
-                 </div>
-            </motion.div>
-        </div>
-    );
-  }
+
 
   return (
     <div className="space-y-20 pb-20">
@@ -395,115 +398,61 @@ const Home = () => {
             </div>
 
             {/* Right Side */}
+
              <motion.div 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4 }}
                 className="order-1 lg:order-2 hidden lg:flex h-[500px] items-center justify-center relative w-full perspective-1000"
             >
-                         <div className="relative w-full h-[500px] flex items-center justify-center">
-                             <CardSwap
-                                cardDistance={40}
-                                verticalDistance={30}
-                                delay={4000}
-                                skewAmount={2}
-                                width={450}
-                                height={280}
-                            >
-                                <Card customClass="flex flex-col rounded-2xl border border-blue-100 bg-white shadow-2xl cursor-pointer group ring-1 ring-blue-50/50">
-                                     {/* Window Header */}
-                                    <div className="h-10 border-b border-slate-100 flex items-center px-4 space-x-3 bg-slate-50/80 backdrop-blur-sm shrink-0 rounded-t-2xl">
-                                        <div className="flex space-x-1.5">
-                                            <div className="w-2.5 h-2.5 rounded-full bg-red-400 group-hover:bg-red-500 transition-colors" />
-                                            <div className="w-2.5 h-2.5 rounded-full bg-amber-400 group-hover:bg-amber-500 transition-colors" />
-                                            <div className="w-2.5 h-2.5 rounded-full bg-green-400 group-hover:bg-green-500 transition-colors" />
-                                        </div>
-                                        <Shield className="w-3.5 h-3.5 text-slate-400 ml-2" />
-                                        <span className="text-xs font-medium text-slate-600 tracking-wide font-sans">Geo_Management_Overview.mp4</span>
-                                    </div>
-                                    {/* Window Body */}
-                                    <div className="relative flex-1 w-full bg-white flex items-center justify-center overflow-hidden">
-                                        <video 
-                                            src="/Geo Management (1).mp4" 
-                                            autoPlay 
-                                            muted 
-                                            loop 
-                                            playsInline 
-                                            className="w-full h-full object-contain"
-                                        />
-                                    </div>
-                                </Card>
+                {/* No container loader here anymore */}
+                 <div className="relative w-full h-[500px] flex items-center justify-center">
+                     <CardSwap
+                        cardDistance={40}
+                        verticalDistance={30}
+                        delay={4000}
+                        skewAmount={2}
+                        width={450}
+                        height={280}
+                    >
+                        <Card customClass="flex flex-col rounded-2xl border border-blue-100 bg-white shadow-2xl cursor-pointer group ring-1 ring-blue-50/50">
+                             <VideoCardContent 
+                                src="/Geo Management (1).mp4" 
+                                title="Geo_Management_Overview.mp4" 
+                                icon={Shield}
+                                colorScheme="red" // Or keep distinct like current first card
+                             />
+                        </Card>
 
-                                <Card customClass="flex flex-col rounded-2xl border border-blue-100 bg-white shadow-2xl cursor-pointer group ring-1 ring-blue-50/50">
-                                    <div className="h-10 border-b border-slate-100 flex items-center px-4 space-x-3 bg-slate-50/80 backdrop-blur-sm shrink-0 rounded-t-2xl">
-                                         <div className="flex space-x-1.5">
-                                            <div className="w-2.5 h-2.5 rounded-full bg-white/20 group-hover:bg-red-500/50 transition-colors" />
-                                            <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-yellow-500/50 transition-colors" />
-                                            <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-green-500/50 transition-colors" />
-                                        </div>
-                                        <FileText className="w-3.5 h-3.5 text-white/40 ml-2" />
-                                        <span className="text-xs font-medium text-slate-600 tracking-wide font-sans">Sub_Zone_Config.mp4</span>
-                                    </div>
-                                    <div className="relative flex-1 w-full bg-white flex items-center justify-center overflow-hidden rounded-b-2xl">
-                                        <video 
-                                            src="/Geo management - Manage Sub Zones (1).mp4" 
-                                            autoPlay 
-                                            muted 
-                                            loop 
-                                            playsInline 
-                                            className="w-full h-full object-contain"
-                                        />
-                                    </div>
-                                </Card>
+                        <Card customClass="flex flex-col rounded-2xl border border-blue-100 bg-white shadow-2xl cursor-pointer group ring-1 ring-blue-50/50">
+                             <VideoCardContent 
+                                src="/Geo management - Manage Sub Zones (1).mp4" 
+                                title="Sub_Zone_Config.mp4" 
+                                icon={FileText}
+                                colorScheme="amber" // Simplified class logic inside component
+                             />
+                        </Card>
 
-                                <Card customClass="flex flex-col rounded-2xl border border-blue-100 bg-white shadow-2xl cursor-pointer group ring-1 ring-blue-50/50">
-                                    <div className="h-10 border-b border-slate-100 flex items-center px-4 space-x-3 bg-slate-50/80 backdrop-blur-sm shrink-0 rounded-t-2xl">
-                                         <div className="flex space-x-1.5">
-                                            <div className="w-2.5 h-2.5 rounded-full bg-white/20 group-hover:bg-red-500/50 transition-colors" />
-                                            <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-yellow-500/50 transition-colors" />
-                                            <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-green-500/50 transition-colors" />
-                                        </div>
-                                        <TrendingUp className="w-3.5 h-3.5 text-white/40 ml-2" />
-                                        <span className="text-xs font-medium text-slate-600 tracking-wide font-sans">Analytics_Walkthrough.mp4</span>
-                                    </div>
-                                    <div className="relative flex-1 w-full bg-white flex items-center justify-center overflow-hidden rounded-b-2xl">
-                                        {/* Reusing video #1 for variety */}
-                                        <video 
-                                            src="/Geo Management (1).mp4" 
-                                            autoPlay 
-                                            muted 
-                                            loop 
-                                            playsInline 
-                                            className="w-full h-full object-contain"
-                                        />
-                                    </div>
-                                </Card>
-                                
-                                <Card customClass="flex flex-col rounded-2xl border border-blue-100 bg-white shadow-2xl cursor-pointer group ring-1 ring-blue-50/50">
-                                    <div className="h-10 border-b border-slate-100 flex items-center px-4 space-x-3 bg-slate-50/80 backdrop-blur-sm shrink-0 rounded-t-2xl">
-                                         <div className="flex space-x-1.5">
-                                            <div className="w-2.5 h-2.5 rounded-full bg-white/20 group-hover:bg-red-500/50 transition-colors" />
-                                            <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-yellow-500/50 transition-colors" />
-                                            <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-green-500/50 transition-colors" />
-                                        </div>
-                                        <Star className="w-3.5 h-3.5 text-white/40 ml-2" />
-                                        <span className="text-xs font-medium text-slate-600 tracking-wide font-sans">Feature_Highlight.mp4</span>
-                                    </div>
-                                    <div className="relative flex-1 w-full bg-white flex items-center justify-center overflow-hidden rounded-b-2xl">
-                                        {/* Reusing video #2 for variety */}
-                                        <video 
-                                            src="/Geo management - Manage Sub Zones (1).mp4" 
-                                            autoPlay 
-                                            muted 
-                                            loop 
-                                            playsInline 
-                                            className="w-full h-full object-contain"
-                                        />
-                                    </div>
-                                </Card>
-                            </CardSwap>
-                        </div>
-                    </motion.div>
+                        <Card customClass="flex flex-col rounded-2xl border border-blue-100 bg-white shadow-2xl cursor-pointer group ring-1 ring-blue-50/50">
+                             <VideoCardContent 
+                                src="/Geo Management (1).mp4" 
+                                title="Analytics_Walkthrough.mp4" 
+                                icon={TrendingUp}
+                                colorScheme="green"
+                             />
+                        </Card>
+                        
+                        <Card customClass="flex flex-col rounded-2xl border border-blue-100 bg-white shadow-2xl cursor-pointer group ring-1 ring-blue-50/50">
+                            <VideoCardContent 
+                                src="/Geo management - Manage Sub Zones (1).mp4" 
+                                title="Feature_Highlight.mp4" 
+                                icon={Star}
+                                colorScheme="default"
+                            />
+                        </Card>
+                    </CardSwap>
+                </div>
+            </motion.div>
         </div>
       </section>
 
