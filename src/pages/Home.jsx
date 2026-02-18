@@ -13,6 +13,57 @@ const Home = () => {
   const location = useLocation();
   const searchContainerRef = useRef(null);
   
+  // Loading State
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const videoRefs = useRef([]);
+  const videosToLoad = 2; // We have 2 unique videos to load
+
+  useEffect(() => {
+    let loadedCount = 0;
+    const totalVideos = videosToLoad;
+
+    const handleVideoLoad = () => {
+      loadedCount++;
+      const progress = Math.min((loadedCount / totalVideos) * 100, 100);
+      setLoadingProgress(Math.round(progress));
+      
+      if (loadedCount >= totalVideos) {
+        setTimeout(() => {
+            setIsLoading(false);
+        }, 500); // Small buffer
+      }
+    };
+
+    // Fallback in case videos fail or are cached
+    const timeout = setTimeout(() => {
+        setIsLoading(false);
+    }, 8000); // 8s max wait
+
+    // Attach listeners to current refs
+    videoRefs.current.forEach(video => {
+        if (video) {
+            if (video.readyState >= 3) { // HSP_ENOUGH_DATA
+                handleVideoLoad();
+            } else {
+                video.addEventListener('loadeddata', handleVideoLoad);
+                video.addEventListener('canplay', handleVideoLoad);
+            }
+        }
+    });
+
+    return () => {
+        clearTimeout(timeout);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        videoRefs.current.forEach(video => {
+            if (video) {
+                video.removeEventListener('loadeddata', handleVideoLoad);
+                video.removeEventListener('canplay', handleVideoLoad);
+            }
+        });
+    };
+  }, []);
+
   const [heroTextIndex, setHeroTextIndex] = useState(0);
   const heroPhrases = ["Insurance Platform", "Claims Workflow", "Policy Engine", "Receipt Workflow"];
 
@@ -126,6 +177,53 @@ const Home = () => {
   }
 
   const newGuides = allGuides.slice(1, 3); 
+
+  if (isLoading) {
+    return (
+        <div className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center font-sans">
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center space-y-4"
+            >
+                <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-primary to-secondary tracking-tighter">
+                    {loadingProgress}%
+                </div>
+                <div className="h-1 w-48 bg-slate-100 rounded-full overflow-hidden mx-auto">
+                    <motion.div 
+                        className="h-full bg-primary" 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${loadingProgress}%` }}
+                        transition={{ ease: "linear" }}
+                    />
+                </div>
+                 <p className="text-slate-400 text-sm font-medium animate-pulse">Loading Assets...</p>
+                 
+                 {/* Hidden videos to trigger loading */}
+                 <div className="hidden">
+                    {['/Geo Management (1).mp4', '/Geo management - Manage Sub Zones (1).mp4'].map((src, i) => (
+                        <video 
+                            key={i}
+                            ref={el => {
+                                // We need 4 distinct refs for the counter logic, but we only have 2 unique videos.
+                                // Let's just track unique loads or bind twice?
+                                // Actually, simpler: just load the unique assets once.
+                                // But the user wants "videos inside cardswap is done loading".
+                                // Let's preload the source assets.
+                                if(el && !videoRefs.current.includes(el)) videoRefs.current.push(el) 
+                            }}
+                            src={src} 
+                            preload="auto"
+                            muted
+                        />
+                    ))}
+                    {/* Duplicate calls to match count logic or adjust count logic */}
+                    {/* Let's adjust logic: we just need the assets loaded via browser cache. */}
+                 </div>
+            </motion.div>
+        </div>
+    );
+  }
 
   return (
     <div className="space-y-20 pb-20">
