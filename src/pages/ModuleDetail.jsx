@@ -68,11 +68,11 @@ const ModuleDetail = () => {
             <div className="grid gap-4">
               {module.guides.map((guide, index) => (
                 <motion.div
-                  key={guide.id}
                 >
                   <Link 
-                    to={`/guide/${guide.id}`}
-                    className="group glass-card rounded-2xl p-6 flex items-center justify-between hover:scale-[1.01] transition-transform"
+                    key={guide.id}
+                    to={`/module/${moduleId}/${guide.id}`}
+                    className="block group glass-card rounded-2xl p-6 flex items-center justify-between hover:scale-[1.01] transition-transform"
                   >
                     <div className="flex items-center gap-6">
                       <div className="h-16 w-16 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-primary transition-colors duration-300">
@@ -82,7 +82,11 @@ const ModuleDetail = () => {
                         <h3 className="text-xl font-bold text-heading mb-1">
                           {guide.title}
                         </h3>
-                        <p className="text-slate-500 text-sm">{guide.description}</p>
+                        <p className="text-slate-500 text-sm">
+                          {guide.description.length > 120 
+                            ? `${guide.description.slice(0, 120)}...` 
+                            : guide.description}
+                        </p>
                       </div>
                     </div>
                     

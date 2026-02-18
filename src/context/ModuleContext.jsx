@@ -13,12 +13,12 @@ export const useModules = () => {
 
 export const ModuleProvider = ({ children }) => {
   const [modules, setModules] = useState(() => {
-    const savedModules = localStorage.getItem('helpdesk_modules_v1'); // Changed key to force refresh
+    const savedModules = localStorage.getItem('helpdesk_modules_v4'); // Changed key to force refresh
     return savedModules ? JSON.parse(savedModules) : initialModules;
   });
 
   useEffect(() => {
-    localStorage.setItem('helpdesk_modules_v1', JSON.stringify(modules));
+    localStorage.setItem('helpdesk_modules_v4', JSON.stringify(modules));
   }, [modules]);
 
   const addModule = (newModule) => {

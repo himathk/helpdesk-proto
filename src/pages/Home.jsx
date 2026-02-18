@@ -1,16 +1,27 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Search, ArrowRight, Star, TrendingUp, Clock, PlayCircle } from 'lucide-react';
-import { modules as staticModules } from '../data/modules'; // Keep for structure ref if needed, but we replace usage
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, ArrowRight, Star, TrendingUp, Clock, PlayCircle, X, ChevronRight, FileText, Layers, Shield } from 'lucide-react';
 import { useModules } from '../context/ModuleContext';
 import DynamicIcon from '../components/DynamicIcon';
-import ThreeDHero from '../components/ThreeDHero';
+import CardSwap, { Card } from '../components/CardSwap';
 import { Link, useLocation } from 'react-router-dom';
 
 const Home = () => {
   const { modules } = useModules();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const location = useLocation();
+  const searchContainerRef = useRef(null);
+  
+  const [heroTextIndex, setHeroTextIndex] = useState(0);
+  const heroPhrases = ["Insurance Platform", "Claims Workflow", "Policy Engine", "Receipt Workflow"];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroTextIndex((prev) => (prev + 1) % heroPhrases.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Scroll to hash on mount or hash change
   useEffect(() => {
@@ -24,76 +35,377 @@ const Home = () => {
     }
   }, [location]);
 
+  // Click outside to close search
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        if (!searchTerm) {
+             setIsSearchFocused(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [searchTerm]);
+
+
   const filteredModules = modules.filter(module =>
     module.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     module.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Flatten all guides for featured/new sections (Simulated selection)
+  // Search Logic with "Exactly Where" context
+  const getSearchResults = (term) => {
+      if (!term.trim()) return [];
+      const lowerTerm = term.toLowerCase();
+      const results = [];
+
+      modules.forEach(module => {
+          // 1. Match Module
+          if (module.title.toLowerCase().includes(lowerTerm) || module.description.toLowerCase().includes(lowerTerm)) {
+              results.push({
+                  type: 'module',
+                  id: module.id,
+                  title: module.title,
+                  description: module.description,
+                  icon: module.icon,
+                  matchContext: 'Module'
+              });
+          }
+
+          // 2. Match Guides & Steps
+          module.guides?.forEach(guide => {
+               // Match Guide Title/Desc
+               if (guide.title.toLowerCase().includes(lowerTerm) || guide.description.toLowerCase().includes(lowerTerm)) {
+                   results.push({
+                       type: 'guide',
+                       id: guide.id,
+                       moduleId: module.id,
+                       title: guide.title,
+                       description: guide.description, // Use guide description
+                       breadcrumb: module.title,
+                       matchContext: 'Guide'
+                   });
+               }
+
+               // Match Steps
+               guide.steps?.forEach((step, index) => {
+                   if (step.toLowerCase().includes(lowerTerm)) {
+                       // Avoid duplicates if we already added this guide (optional, but "exactly where" implies specificity)
+                       // Let's allow specific step matches even if guide matches, or maybe just list it as a deep link?
+                       // For now, let's treat it as a unique result pointing to the specific context
+                       results.push({
+                           type: 'step',
+                           id: guide.id, // Link to guide
+                           moduleId: module.id,
+                           title: guide.title,
+                           description: step, // Show the step content
+                           breadcrumb: `${module.title} > ${guide.title}`,
+                           matchContext: `Step ${index + 1}`,
+                           stepIndex: index + 1
+                       });
+                   }
+               });
+          });
+      });
+      return results;
+  };
+
+  const searchResults = getSearchResults(searchTerm);
+
+  // Flatten all guides for featured/new sections
   const allGuides = modules.flatMap(m => m.guides || []);
   
   // Select specific guides for Featured section
   const featuredGuides = allGuides.filter(g => ['geo-management', 'sub-zone-management'].includes(g.id));
   
-  // Fallback if not found (e.g. during development/testing paths)
+  // Fallback if not found
   if (featuredGuides.length === 0) {
       featuredGuides.push(...allGuides.slice(0, 2));
   }
 
-  const newGuides = allGuides.slice(1, 3); // Take next 2 as new for demo
+  const newGuides = allGuides.slice(1, 3); 
 
   return (
     <div className="space-y-20 pb-20">
       {/* Hero */}
-      <section className="text-center space-y-8 py-10 relative overflow-hidden">
+      <section className="relative overflow-hidden transition-all duration-500 ease-in-out min-h-[600px] flex flex-col justify-center">
         {/* Background Decorative Elements */}
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto px-4">
-            <div className="order-2 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
-                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100/50 text-blue-700 text-sm font-medium border border-blue-200"
-                >
-                    <Star className="h-3.5 w-3.5 fill-secondary" />
-                    <span>New Guide: AI Claims Processing</span>
-                </motion.div>
-
-                <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-heading">
-                Master your <br/>
-                <span className="text-gradient">Insurance Platform</span>
-                </h1>
+        <div className="max-w-7xl mx-auto px-4 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+            <div className="order-2 lg:order-1 flex flex-col space-y-8 items-center lg:items-start text-center lg:text-left">
                 
-                <p className="text-xl text-slate-600 max-w-2xl leading-relaxed">
-                Expert guides, video tutorials, and step-by-step walkthroughs to help you navigate and succeed.
-                </p>
+                {/* Intro Content */}
+                <div className="flex flex-col items-center lg:items-start gap-8 w-full">
+                             <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100/50 text-blue-700 text-sm font-medium border border-blue-200 self-center lg:self-start"
+                            >
+                                <Star className="h-3.5 w-3.5 fill-secondary" />
+                                <span>New Guide: AI Claims Processing</span>
+                            </motion.div>
 
-                <div className="w-full max-w-lg relative group">
-                <div className="absolute inset-0 bg-primary/30 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                <div className="relative glass-panel rounded-2xl p-2 flex items-center transition-transform transform group-hover:scale-[1.01] duration-300">
-                    <Search className="h-6 w-6 text-slate-400 ml-4" />
-                    <input
-                    type="text"
-                    className="w-full bg-transparent border-none focus:ring-0 text-lg px-4 py-3 text-slate-900 placeholder-slate-400"
-                    placeholder="Search for modules or guides..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        if(!window.location.hash.includes('modules') && e.target.value) {
-                            // Optional: scroll to modules if searching
-                            const el = document.getElementById('modules');
-                            if(el) el.scrollIntoView({ behavior: 'smooth' });
-                        }
-                    }}
-                    />
+                            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-heading">
+                            Master your <br/>
+                            <div className="h-[1.2em] relative overflow-hidden inline-block min-w-[700px] text-left">
+                                <AnimatePresence mode="popLayout">
+                                    <motion.span 
+                                        key={heroTextIndex}
+                                        initial={{ y: 50, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        exit={{ y: -50, opacity: 0 }}
+                                        transition={{ duration: 0.5, ease: "backOut" }}
+                                        className="text-gradient absolute top-0 left-0 whitespace-nowrap"
+                                    >
+                                        {heroPhrases[heroTextIndex]}
+                                    </motion.span>
+                                </AnimatePresence>
+                            </div>
+                            </h1>
+                            
+                            <p className="text-xl text-slate-600 max-w-2xl leading-relaxed">
+                            Expert guides, video tutorials, and step-by-step walkthroughs to help you navigate and succeed.
+                            </p>
                 </div>
+
+                {/* Search Bar Container */}
+                <div className={`w-full relative group z-30 transition-all duration-300 ${isSearchFocused ? 'max-w-xl' : 'max-w-lg'}`}>
+                    <div className={`absolute inset-0 bg-primary/30 rounded-2xl blur-xl transition-opacity duration-300 ${isSearchFocused ? 'opacity-40' : 'opacity-20 group-hover:opacity-30'}`}></div>
+                    <div 
+                        className={`
+                            relative glass-panel rounded-2xl flex items-center transition-all duration-300
+                            ${isSearchFocused ? 'p-4 shadow-2xl ring-2 ring-primary/20 bg-white' : 'p-2 group-hover:scale-[1.01]'}
+                        `}
+                    >
+                        <Search className={`h-6 w-6 ml-4 transition-colors ${isSearchFocused ? 'text-primary' : 'text-slate-400'}`} />
+                        <input
+                            type="text"
+                            className="w-full bg-transparent border-none focus:ring-0 text-lg px-4 py-3 text-slate-900 placeholder-slate-400"
+                            placeholder={isSearchFocused ? "Search for guides, steps, or modules..." : "Search for modules or guides..."}
+                            value={searchTerm}
+                            onFocus={() => setIsSearchFocused(true)}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        {isSearchFocused && (
+                            <button 
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    if(!searchTerm) setIsSearchFocused(false);
+                                }}
+                                className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 mr-2"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Search Results Dropdown */}
+                    <AnimatePresence>
+                        {isSearchFocused && searchTerm && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute top-full left-0 right-0 mt-4 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/60 overflow-hidden z-20 max-h-[60vh] overflow-y-auto custom-scrollbar"
+                            >
+                                {searchResults.length > 0 ? (
+                                    <div className="p-2">
+                                        <div className="px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                            Found {searchResults.length} results
+                                        </div>
+                                        {searchResults.map((result, idx) => (
+                                            <Link 
+                                                to={
+                                                    result.type === 'module' ? `/module/${result.id}` : 
+                                                    result.type === 'step' ? `/module/${result.moduleId}/${result.id}#step-${result.stepIndex}` :
+                                                    `/module/${result.moduleId}/${result.id}`
+                                                }
+                                                key={idx}
+                                                className="block"
+                                                onClick={() => setIsSearchFocused(false)} // Close on select
+                                            >
+                                                <div className="p-4 hover:bg-slate-50 rounded-xl transition-colors group cursor-pointer border border-transparent hover:border-slate-100">
+                                                    <div className="flex items-start gap-4">
+                                                        <div className="mt-1 h-8 w-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                                            {result.type === 'module' ? <Layers className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <h4 className="font-semibold text-heading group-hover:text-primary transition-colors">
+                                                                    {result.title}
+                                                                </h4>
+                                                                {result.matchContext && (
+                                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                                                        {result.matchContext}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            
+                                                            {result.breadcrumb && (
+                                                                <div className="flex items-center gap-1 text-xs text-slate-400 mb-1">
+                                                                    <span>{result.breadcrumb}</span>
+                                                                </div>
+                                                            )}
+                                                            
+                                                            <p className="text-sm text-slate-500 line-clamp-1">
+                                                                {result.description}
+                                                            </p>
+                                                        </div>
+                                                        <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                                                    </div>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-8 text-center text-slate-500">
+                                        <p>No results found for "{searchTerm}"</p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                     {/* Suggestions when focused but no term */}
+                     <AnimatePresence>
+                        {isSearchFocused && !searchTerm && (
+                             <motion.div
+                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                transition={{ delay: 0.1 }}
+                                className="absolute top-full left-0 right-0 mt-4 z-20"
+                             >
+                                <div className="flex flex-wrap gap-2 justify-center">
+                                    {['Policies', 'Claims', 'Users', 'Geo'].map((tag) => (
+                                        <button
+                                            key={tag}
+                                            onClick={() => setSearchTerm(tag)}
+                                            className="px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-slate-200 text-slate-600 text-sm hover:bg-white hover:border-primary/30 hover:text-primary transition-colors shadow-sm"
+                                        >
+                                            {tag}
+                                        </button>
+                                    ))}
+                                </div>
+                             </motion.div>
+                        )}
+                     </AnimatePresence>
                 </div>
             </div>
 
-            <div className="order-1 lg:order-2 h-[400px] flex items-center justify-center relative">
-                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-secondary/10 rounded-full blur-3xl opacity-50 animate-pulse"></div>
-                 <ThreeDHero />
-            </div>
+            {/* Right Side */}
+             <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4 }}
+                className="order-1 lg:order-2 hidden lg:flex h-[500px] items-center justify-center relative w-full perspective-1000"
+            >
+                         <div className="relative w-full h-[500px] flex items-center justify-center">
+                             <CardSwap
+                                cardDistance={40}
+                                verticalDistance={30}
+                                delay={4000}
+                                skewAmount={2}
+                                width={450}
+                                height={280}
+                            >
+                                <Card customClass="flex flex-col rounded-2xl border border-blue-100 bg-white shadow-2xl cursor-pointer group ring-1 ring-blue-50/50">
+                                     {/* Window Header */}
+                                    <div className="h-10 border-b border-slate-100 flex items-center px-4 space-x-3 bg-slate-50/80 backdrop-blur-sm shrink-0 rounded-t-2xl">
+                                        <div className="flex space-x-1.5">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-red-400 group-hover:bg-red-500 transition-colors" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-amber-400 group-hover:bg-amber-500 transition-colors" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-green-400 group-hover:bg-green-500 transition-colors" />
+                                        </div>
+                                        <Shield className="w-3.5 h-3.5 text-slate-400 ml-2" />
+                                        <span className="text-xs font-medium text-slate-600 tracking-wide font-sans">Geo_Management_Overview.mp4</span>
+                                    </div>
+                                    {/* Window Body */}
+                                    <div className="relative flex-1 w-full bg-white flex items-center justify-center overflow-hidden">
+                                        <video 
+                                            src="/Geo Management (1).mp4" 
+                                            autoPlay 
+                                            muted 
+                                            loop 
+                                            playsInline 
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                </Card>
+
+                                <Card customClass="flex flex-col rounded-2xl border border-blue-100 bg-white shadow-2xl cursor-pointer group ring-1 ring-blue-50/50">
+                                    <div className="h-10 border-b border-slate-100 flex items-center px-4 space-x-3 bg-slate-50/80 backdrop-blur-sm shrink-0 rounded-t-2xl">
+                                         <div className="flex space-x-1.5">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-white/20 group-hover:bg-red-500/50 transition-colors" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-yellow-500/50 transition-colors" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-green-500/50 transition-colors" />
+                                        </div>
+                                        <FileText className="w-3.5 h-3.5 text-white/40 ml-2" />
+                                        <span className="text-xs font-medium text-slate-600 tracking-wide font-sans">Sub_Zone_Config.mp4</span>
+                                    </div>
+                                    <div className="relative flex-1 w-full bg-white flex items-center justify-center overflow-hidden rounded-b-2xl">
+                                        <video 
+                                            src="/Geo management - Manage Sub Zones (1).mp4" 
+                                            autoPlay 
+                                            muted 
+                                            loop 
+                                            playsInline 
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                </Card>
+
+                                <Card customClass="flex flex-col rounded-2xl border border-blue-100 bg-white shadow-2xl cursor-pointer group ring-1 ring-blue-50/50">
+                                    <div className="h-10 border-b border-slate-100 flex items-center px-4 space-x-3 bg-slate-50/80 backdrop-blur-sm shrink-0 rounded-t-2xl">
+                                         <div className="flex space-x-1.5">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-white/20 group-hover:bg-red-500/50 transition-colors" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-yellow-500/50 transition-colors" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-green-500/50 transition-colors" />
+                                        </div>
+                                        <TrendingUp className="w-3.5 h-3.5 text-white/40 ml-2" />
+                                        <span className="text-xs font-medium text-slate-600 tracking-wide font-sans">Analytics_Walkthrough.mp4</span>
+                                    </div>
+                                    <div className="relative flex-1 w-full bg-white flex items-center justify-center overflow-hidden rounded-b-2xl">
+                                        {/* Reusing video #1 for variety */}
+                                        <video 
+                                            src="/Geo Management (1).mp4" 
+                                            autoPlay 
+                                            muted 
+                                            loop 
+                                            playsInline 
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                </Card>
+                                
+                                <Card customClass="flex flex-col rounded-2xl border border-blue-100 bg-white shadow-2xl cursor-pointer group ring-1 ring-blue-50/50">
+                                    <div className="h-10 border-b border-slate-100 flex items-center px-4 space-x-3 bg-slate-50/80 backdrop-blur-sm shrink-0 rounded-t-2xl">
+                                         <div className="flex space-x-1.5">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-white/20 group-hover:bg-red-500/50 transition-colors" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-yellow-500/50 transition-colors" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-green-500/50 transition-colors" />
+                                        </div>
+                                        <Star className="w-3.5 h-3.5 text-white/40 ml-2" />
+                                        <span className="text-xs font-medium text-slate-600 tracking-wide font-sans">Feature_Highlight.mp4</span>
+                                    </div>
+                                    <div className="relative flex-1 w-full bg-white flex items-center justify-center overflow-hidden rounded-b-2xl">
+                                        {/* Reusing video #2 for variety */}
+                                        <video 
+                                            src="/Geo management - Manage Sub Zones (1).mp4" 
+                                            autoPlay 
+                                            muted 
+                                            loop 
+                                            playsInline 
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                </Card>
+                            </CardSwap>
+                        </div>
+                    </motion.div>
         </div>
       </section>
 
@@ -191,7 +503,7 @@ const Home = () => {
                     </h3>
                     
                     <p className="text-slate-500 mb-8 flex-grow leading-relaxed z-10 text-base">
-                        {module.description}
+                        {module.description.length > 100 ? module.description.substring(0, 100) + '...' : module.description}
                     </p>
 
                     <div className="flex items-center justify-between w-full mt-auto z-10">

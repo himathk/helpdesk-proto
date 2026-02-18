@@ -21,8 +21,13 @@ const AdminModuleForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Get all valid icon names from lucide-react
-  const allIconNames = Object.keys(Icons).filter(key => key !== 'createLucideIcon' && key !== 'default');
+  // Get all valid icon names from lucide-react, filtering out duplicates ending with 'Icon'
+  const allIconNames = Object.keys(Icons).filter(key => {
+    if (key === 'createLucideIcon' || key === 'default') return false;
+    // Lucide exports both 'IconName' and 'IconNameIcon', we only want the former
+    if (key.endsWith('Icon') && Icons[key.slice(0, -4)]) return false;
+    return true;
+  });
   
   // Filter icons based on search
   const filteredIcons = allIconNames.filter(name => 
@@ -244,7 +249,7 @@ const AdminModuleForm = () => {
                                 {formData.title || 'Policy Management'}
                             </h3>
                             <p className="text-slate-500 text-sm leading-relaxed">
-                                {formData.description || 'Learn how to create, update, and manage insurance policies efficiently.'}
+                                {formData.description ? (formData.description.length > 100 ? formData.description.substring(0, 100) + '...' : formData.description) : 'Learn how to create, update, and manage insurance policies efficiently.'}
                             </p>
                         </div>
 

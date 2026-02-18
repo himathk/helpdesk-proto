@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Layers, LogOut, ChevronRight, Menu, Bell } from 'lucide-react';
+import { LayoutDashboard, Layers, LogOut, ChevronRight, Menu, Bell, Users } from 'lucide-react';
 import Grainient from '../Grainient';
 import { motion } from 'framer-motion';
 
@@ -15,6 +15,7 @@ const AdminLayout = () => {
   const navItems = [
     { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
     { label: 'Modules', path: '/admin/modules', icon: Layers },
+    { label: 'Customers', path: '/admin/users', icon: Users },
   ];
   
   // Clean up path for breadcrumbs

@@ -5,6 +5,10 @@ import { Trash, Plus, ArrowLeft, Save, Loader2, PlayCircle, GripVertical } from 
 import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion';
 
 // Extracted Step Item Component for Drag Controls
+import Editor, { BtnBold, BtnItalic, BtnBulletList, BtnNumberedList, BtnLink, Toolbar, Separator } from 'react-simple-wysiwyg';
+
+// ... (existing imports)
+
 const StepItem = ({ step, index, handleStepChange, removeStep }) => {
     const controls = useDragControls();
 
@@ -27,37 +31,49 @@ const StepItem = ({ step, index, handleStepChange, removeStep }) => {
 
             {/* Content Card */}
             <div className="flex-1">
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl group-hover:border-primary/30 group-hover:shadow-md group-hover:bg-white transition-all flex gap-3 items-start">
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl group-hover:border-primary/30 group-hover:shadow-md group-hover:bg-white transition-all flex gap-3 items-start overflow-hidden">
                     {/* Drag Handle - Only this initiates drag */}
                     <div 
-                        className="mt-1 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing touch-none"
+                        className="p-4 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing touch-none self-stretch flex items-center bg-slate-100/50 border-r border-slate-100"
                         onPointerDown={(e) => controls.start(e)}
                     >
                         <GripVertical className="h-4 w-4" />
                     </div>
                     
-                    <div className="flex-1">
-                        <textarea
-                            value={step.content}
-                            onChange={(e) => {
-                                handleStepChange(step.id, e.target.value);
-                                e.target.style.height = 'auto';
-                                e.target.style.height = e.target.scrollHeight + 'px';
-                            }}
+                    <div className="flex-1 min-w-0 pr-2 py-2">
+                         <Editor
+                            value={step.content} 
+                            onChange={(e) => handleStepChange(step.id, e.target.value)}
                             placeholder={`Describe step ${index + 1}...`}
-                            rows={1}
-                            className="w-full bg-transparent border-none p-0 focus:ring-0 text-slate-700 placeholder-slate-400 resize-none font-medium leading-relaxed overflow-hidden py-1"
-                            onFocus={(e) => {
-                                e.target.style.height = 'auto';
-                                e.target.style.height = e.target.scrollHeight + 'px';
-                            }}
-                        />
+                            containerProps={{ style: { border: 'none', background: 'transparent', minHeight: '80px' } }}
+                         >
+                            <Toolbar>
+                                <BtnBold />
+                                <BtnItalic />
+                                <Separator />
+                                <BtnBulletList />
+                                <BtnNumberedList />
+                                <Separator />
+                                <BtnLink />
+                            </Toolbar>
+                         </Editor>
+                         <style>{`
+                            .rsw-toolbar { background: transparent !important; margin-bottom: 0.5rem !important; }
+                            .rsw-btn { color: #64748b !important; }
+                            .rsw-btn:hover { background: #e2e8f0 !important; color: #0f172a !important; }
+                            .rsw-btn[data-active="true"] { background: #e0e7ff !important; color: #4f46e5 !important; }
+                            .rsw-editor { min-height: 80px; outline: none !important; font-size: 0.875rem; color: #334155; }
+                            .rsw-ce { min-height: 80px; }
+                            /* Fix for list styles inside editor */
+                            .rsw-editor ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin-bottom: 0.5rem; }
+                            .rsw-editor ol { list-style-type: decimal !important; padding-left: 1.5rem !important; margin-bottom: 0.5rem; }
+                         `}</style>
                     </div>
 
                     <button
                         type="button"
                         onClick={() => removeStep(step.id)}
-                        className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                        className="m-2 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all self-start"
                         title="Remove Step"
                     >
                         <Trash className="h-4 w-4" />

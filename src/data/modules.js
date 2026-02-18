@@ -1,10 +1,69 @@
 // Icons are now referenced by string name
 export const modules = [
   {
-    id: 'policy-management',
-    title: 'Policy Management',
-    description: 'Learn how to create, update, and manage insurance policies efficiently.',
+    id: 'base-module',
+    title: 'Base Module',
+    description: 'The Base Module is the foundation of the software, providing core features like user login, role management, dashboard access, and system settings. It ensures secure access, easy navigation, and a personalized experience for all users.',
+    icon: 'Settings',
+    guides: []
+  },
+  {
+    id: 'admin-module',
+    title: 'Admin Module',
+    description: 'Configure system settings and manage users, roles, and permissions.',
     icon: 'Shield',
+    guides: [
+       {
+        id: 'geo-management',
+        title: 'Geo Management',
+        description: 'Comprehensive guide to managing geographical zones and regions.',
+        videoUrl: '/Geo Management (1).mp4',
+        steps: [
+          'Navigate to System Settings > Geo Management.',
+          'View the map of active zones.',
+          'Click "Add Zone" to define a new geographical area.',
+          'Set zone parameters and assign agents.'
+        ]
+      },
+      {
+        id: 'sub-zone-management',
+        title: 'Sub Zone Management',
+        description: 'Detailed instructions on creating and maintaining sub-zones.',
+        videoUrl: '/Geo management - Manage Sub Zones (1).mp4',
+        steps: [
+          'Select a primary zone from the dashboard.',
+          'Click "Manage Sub Zones".',
+          'Define boundaries for the sub-zone.',
+          'Configure specific rules for the selected area.'
+        ]
+      },
+      {
+        id: 'add-user',
+        title: 'Adding a New User',
+        description: 'Onboard a new employee to the system.',
+        videoUrl: 'https://www.w3schools.com/html/movie.mp4',
+        steps: [
+          'Access the "Admin" panel.',
+          'Select "User Management".',
+          'Click "Invite User" and enter their email address.',
+          'Assign appropriate role (e.g., Agent, Manager).',
+          'Send the invitation.'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'product-builder-module',
+    title: 'Product Builder Module',
+    description: 'Configure system settings and manage users, roles, and permissions.',
+    icon: 'Package',
+    guides: []
+  },
+  {
+    id: 'underwriting-module',
+    title: 'Underwriting Module',
+    description: 'Configure system settings and manage users, roles, and permissions.',
+    icon: 'ClipboardCheck',
     guides: [
       {
         id: 'create-policy',
@@ -35,12 +94,33 @@ export const modules = [
     ]
   },
   {
-    id: 'claims-processing',
-    title: 'Claims Processing',
-    description: 'Guide to handling claims from initiation to settlement.',
-    icon: 'FileText',
+    id: 'finance-module',
+    title: 'Finance Module',
+    description: 'This is the card content. It will be trimmed manually if too long.',
+    icon: 'BarChart3',
+    guides: []
+  },
+  {
+    id: 'payment-module',
+    title: 'Payment Module',
+    description: 'Configure system settings and manage users, roles, and permissions.',
+    icon: 'CreditCard',
+    guides: []
+  },
+  {
+    id: 'receipt-module',
+    title: 'Receipt Module',
+    description: 'Configure system settings and manage users, roles, and permissions.',
+    icon: 'Receipt',
+    guides: []
+  },
+  {
+    id: 'claim-module',
+    title: 'Claim Module',
+    description: 'Configure system settings and manage users, roles, and permissions.',
+    icon: 'AlertCircle',
     guides: [
-      {
+       {
         id: 'file-claim',
         title: 'Filing a New Claim',
         description: 'Initiate a claim request for a customer.',
@@ -56,70 +136,10 @@ export const modules = [
     ]
   },
   {
-    id: 'user-administration',
-    title: 'User Administration',
-    description: 'Manage user roles, permissions, and access controls.',
+    id: 'customer-management',
+    title: 'Customer Management',
+    description: 'Configure system settings and manage users, roles, and permissions.',
     icon: 'Users',
-    guides: [
-      {
-        id: 'add-user',
-        title: 'Adding a New User',
-        description: 'Onboard a new employee to the system.',
-        videoUrl: 'https://www.w3schools.com/html/movie.mp4',
-        steps: [
-          'Access the "Admin" panel.',
-          'Select "User Management".',
-          'Click "Invite User" and enter their email address.',
-          'Assign appropriate role (e.g., Agent, Manager).',
-          'Send the invitation.'
-        ]
-      }
-    ]
-  },
-  {
-    id: 'billing-payments',
-    title: 'Billing & Payments',
-    description: 'Understand billing cycles, invoices, and payment processing.',
-    icon: 'BookOpen',
-    guides: []
-  },
-  {
-    id: 'system-settings',
-    title: 'System Settings',
-    description: 'Configure global settings and preferences for the application.',
-    icon: 'Settings',
-    guides: [
-       {
-        id: 'geo-management',
-        title: 'Geo Management',
-        description: 'Comprehensive guide to managing geographical zones and regions.',
-        videoUrl: '/Geo Management (1).mp4',
-        steps: [
-          'Navigate to System Settings > Geo Management.',
-          'View the map of active zones.',
-          'Click "Add Zone" to define a new geographical area.',
-          'Set zone parameters and assign agents.'
-        ]
-      },
-      {
-        id: 'sub-zone-management',
-        title: 'Sub Zone Management',
-        description: 'Detailed instructions on creating and maintaining sub-zones.',
-        videoUrl: '/Geo management - Manage Sub Zones (1).mp4',
-        steps: [
-          'Select a primary zone from the dashboard.',
-          'Click "Manage Sub Zones".',
-          'Define boundaries for the sub-zone.',
-          'Configure specific rules for the selected area.'
-        ]
-      }
-    ]
-  },
-  {
-    id: 'support-center',
-    title: 'Support Center',
-    description: 'Resources for troubleshooting and contacting technical support.',
-    icon: 'HelpCircle',
     guides: []
   }
 ];
