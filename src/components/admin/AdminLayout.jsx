@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Layers, LogOut, ChevronRight, Menu, Bell, Users } from 'lucide-react';
+import { LayoutDashboard, Layers, LogOut, ChevronRight, Menu, Users } from 'lucide-react';
 import Grainient from '../Grainient';
 import { motion } from 'framer-motion';
 
@@ -101,11 +101,6 @@ const AdminLayout = () => {
                  <Link to="/" target="_blank" className="text-sm font-medium text-slate-500 hover:text-primary transition-colors px-4 py-2 hover:bg-white rounded-lg">
                     View Site
                  </Link>
-                 <div className="h-6 w-px bg-slate-200"></div>
-                 <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-white rounded-full transition-colors relative">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border border-white"></span>
-                 </button>
             </div>
         </header>
 

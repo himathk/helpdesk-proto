@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LifeBuoy, Search, Bell } from 'lucide-react';
+import { LifeBuoy, Search } from 'lucide-react';
 
 const Navbar = ({ isHome }) => {
   const location = useLocation();
@@ -94,10 +94,7 @@ const Navbar = ({ isHome }) => {
 
         {/* Right Actions */}
         <div className="flex items-center gap-4">
-          <button className="p-2 hover:bg-slate-100/80 rounded-full text-slate-500 transition-colors relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full border-2 border-white"></span>
-          </button>
+
           
           <div className="w-8 h-8 rounded-full bg-linear-to-r from-primary to-secondary p-0.5 cursor-pointer hover:shadow-lg transition-shadow">
              <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User" className="w-full h-full rounded-full bg-white" />
